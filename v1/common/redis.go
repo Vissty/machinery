@@ -13,6 +13,7 @@ type RedisConnector struct{}
 func (rc *RedisConnector) NewPool(socketPath, host, password string, db int) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     3,
+		MaxActive:   60,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
 			c, err := rc.open(socketPath, host, password, db)

@@ -72,8 +72,9 @@ func ParseURI(uri string) (URI, error) {
 		return builder, errURIScheme
 	}
 
-	host := u.Hostname()
-	port := u.Port()
+	// host := u.Hostname()
+	// port := u.Port()
+	host, port := splitHostPort(u.Host)
 
 	if host != "" {
 		builder.Host = host
@@ -114,6 +115,29 @@ func ParseURI(uri string) (URI, error) {
 	}
 
 	return builder, nil
+}
+
+// Splits host:port, host, [ho:st]:port, or [ho:st].  Unlike net.SplitHostPort
+// which splits :port, host:port or [host]:port
+//
+// Handles hosts that have colons that are in brackets like [::1]:http
+func splitHostPort(addr string) (host, port string) {
+	i := strings.LastIndex(addr, ":")
+
+	if i >= 0 {
+		host, port = addr[:i], addr[i+1:]
+
+		if len(port) > 0 && port[len(port)-1] == ']' && addr[0] == '[' {
+			// we've split on an inner colon, the port was missing outside of the
+			// brackets so use the full addr.  We could assert that host should not
+			// contain any colons here
+			host, port = addr, ""
+		}
+	} else {
+		host = addr
+	}
+
+	return
 }
 
 // PlainAuth returns a PlainAuth structure based on the parsed URI's

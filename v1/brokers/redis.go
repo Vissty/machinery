@@ -270,7 +270,7 @@ func (b *RedisBroker) consumeOne(delivery []byte, taskProcessor TaskProcessor) e
 		return nil
 	}
 
-	log.INFO.Printf("Received new message: %s", delivery)
+	// log.INFO.Printf("Received new message: %s", delivery)
 
 	return taskProcessor.Process(signature)
 }
@@ -280,18 +280,28 @@ func (b *RedisBroker) nextTask(queue string) (result []byte, err error) {
 	conn := b.open()
 	defer conn.Close()
 
-	items, err := redis.ByteSlices(conn.Do("BLPOP", queue, 1))
+	// items, err := redis.ByteSlices(conn.Do("BLPOP", queue, 1))
+	// if err != nil {
+	// 	return []byte{}, err
+	// }
+
+	// // items[0] - the name of the key where an element was popped
+	// // items[1] - the value of the popped element
+	// if len(items) != 2 {
+	// 	return []byte{}, redis.ErrNil
+	// }
+
+	// result = items[1]
+
+	// return result, nil
+
+	item, err := redis.Bytes(conn.Do("LPOP", queue))
 	if err != nil {
+		time.Sleep(1 * time.Second)
 		return []byte{}, err
 	}
 
-	// items[0] - the name of the key where an element was popped
-	// items[1] - the value of the popped element
-	if len(items) != 2 {
-		return []byte{}, redis.ErrNil
-	}
-
-	result = items[1]
+	result = item
 
 	return result, nil
 }
